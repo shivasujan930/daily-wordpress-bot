@@ -1,0 +1,30 @@
+name: Post Blog to WordPress
+
+on:
+  schedule:
+    - cron: "0 13 * * *"  # Runs daily at 6 AM MST (13:00 UTC)
+  workflow_dispatch:  # Also allows manual triggering
+
+jobs:
+  post-blog:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests python-dotenv
+
+      - name: Run blog script
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+          WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
+        run: python daily_blog.py
