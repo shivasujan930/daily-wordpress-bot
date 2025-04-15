@@ -1,34 +1,35 @@
 import os
 import requests
-import openai
 from datetime import datetime
+from openai import OpenAI
 from dotenv import load_dotenv
 
-# Load environment variables (only works locally with a .env file)
+# Load .env (only relevant for local testing)
 load_dotenv()
 
-# Load sensitive credentials from environment variables
+# Load environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 WP_USERNAME = os.getenv("WP_USERNAME")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
 WP_SITE_URL = os.getenv("WP_SITE_URL")
 
+# Debug: Show which variables are loaded (without printing actual values)
 print("OPENAI_API_KEY:", bool(OPENAI_API_KEY))
 print("WP_USERNAME:", bool(WP_USERNAME))
 print("WP_APP_PASSWORD:", bool(WP_APP_PASSWORD))
 print("WP_SITE_URL:", bool(WP_SITE_URL))
 
-# Validate environment
+# Ensure all environment variables are present
 if not all([OPENAI_API_KEY, WP_USERNAME, WP_APP_PASSWORD, WP_SITE_URL]):
     raise EnvironmentError("Missing one or more required environment variables.")
 
-# Set OpenAI key
-openai.api_key = OPENAI_API_KEY
+# Initialize OpenAI client
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 def generate_blog():
-    """Generate blog content using OpenAI GPT model"""
+    """Generate blog content using GPT model via new OpenAI SDK"""
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a helpful AI writing daily blog posts."},
@@ -37,14 +38,13 @@ def generate_blog():
             temperature=0.7,
             max_tokens=600
         )
-        blog_content = response.choices[0].message["content"]
-        return blog_content
+        return response.choices[0].message.content
     except Exception as e:
         print("❌ Error generating blog:", str(e))
         raise
 
 def post_to_wordpress(title, content):
-    """Publish the blog content to WordPress"""
+    """Publish blog post to WordPress site using REST API"""
     url = f"{WP_SITE_URL}/wp-json/wp/v2/posts"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
     headers = {"Content-Type": "application/json"}
@@ -52,7 +52,7 @@ def post_to_wordpress(title, content):
     payload = {
         "title": title,
         "content": content,
-        "status": "publish"  # Change to 'draft' if you want to manually review before publishing
+        "status": "publish"  # Change to "draft" if needed
     }
 
     try:
