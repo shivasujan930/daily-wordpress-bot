@@ -13,6 +13,11 @@ WP_USERNAME = os.getenv("WP_USERNAME")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
 WP_SITE_URL = os.getenv("WP_SITE_URL")
 
+print("OPENAI_API_KEY:", bool(OPENAI_API_KEY))
+print("WP_USERNAME:", bool(WP_USERNAME))
+print("WP_APP_PASSWORD:", bool(WP_APP_PASSWORD))
+print("WP_SITE_URL:", bool(WP_SITE_URL))
+
 # Validate environment
 if not all([OPENAI_API_KEY, WP_USERNAME, WP_APP_PASSWORD, WP_SITE_URL]):
     raise EnvironmentError("Missing one or more required environment variables.")
