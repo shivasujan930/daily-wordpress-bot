@@ -2,7 +2,7 @@ name: Post Blog to WordPress
 
 on:
   schedule:
-    - cron: "33 21 * * *"  # Runs daily at 2:33 PM MST (21:33 UTC)
+    - cron: "43 21 * * *"  # Runs daily at 2:33 PM MST (21:33 UTC)
   workflow_dispatch:  # Also allows manual triggering
 
 jobs:
