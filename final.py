@@ -2,9 +2,9 @@ import requests
 import datetime
 import base64
 import os
+import openai
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 # Load environment variables from .env file
 load_dotenv()
 print("OpenAI key loaded as:", os.getenv("OPENAI_API_KEY"))
