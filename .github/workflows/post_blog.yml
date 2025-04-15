@@ -2,8 +2,8 @@ name: Post Blog to WordPress
 
 on:
   schedule:
-    - cron: "45 21 * * *"  # Runs daily at 2:33 PM MST (21:33 UTC)
-  workflow_dispatch:  # Allows manual triggering
+    - cron: "33 21 * * *"  # Runs daily at 2:33 PM MST (21:33 UTC)
+  workflow_dispatch:        # Allows manual triggering from GitHub UI
 
 jobs:
   post-blog:
