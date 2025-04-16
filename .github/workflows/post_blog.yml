@@ -26,6 +26,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install openai>=1.0.0 requests python-dotenv gTTS
 
+      - name: Debug - show Python files
+        run: find . -name "*.py"
+
       - name: Run blog and summary generator
         run: python final.py
         env:
@@ -33,13 +36,6 @@ jobs:
           WP_USERNAME: ${{ secrets.WP_USERNAME }}
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
-      - name: Debug - show Python files
-        run: find . -name "*.py"
-        
-      - name: Generate 30-second video script
-        run: python generate_video_script.py
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Generate voiceover (audio only)
         run: python generate_audio_from_blog.py
