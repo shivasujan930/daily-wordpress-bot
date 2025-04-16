@@ -39,11 +39,11 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      - name: Generate voiceover audio (MP3 only)
+      - name: Generate voiceover (audio only)
         run: python generate_audio_only.py
 
-      - name: Upload audio to WordPress
-        run: python upload_audio_to_wordpress.py
+      - name: Upload and embed audio in blog post
+        run: python upload_audio_and_embed.py
         env:
           WP_USERNAME: ${{ secrets.WP_USERNAME }}
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
