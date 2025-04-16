@@ -18,12 +18,14 @@ client = openai.OpenAI(api_key=OPENAI_API_KEY)
 # Step 1: Generate blog + summary
 def generate_blog():
     prompt = (
-        "Write a 250-word blog post on a trending business topic. Then write a 100-word summary "
-        "starting with 'SUMMARY:'."
+        "Write a 250-word blog post on the latest trending news in the stock market and hedge fund world, "
+        "presented from the perspective of a hedge fund manager. Discuss key market trends, emerging investment strategies, "
+        "and risk management tactics, while providing a thoughtful analysis of the current financial landscape and its macroeconomic implications. "
+        "Then write a 100-word summary starting with 'SUMMARY:' that encapsulates the main insights and strategic takeaways from the post."
     )
 
     response = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4.1-nano",
         messages=[
             {"role": "system", "content": "You are a helpful assistant that writes blog content."},
             {"role": "user", "content": prompt}
