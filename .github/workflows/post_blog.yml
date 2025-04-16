@@ -40,7 +40,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Generate voiceover (audio only)
-        run: python generate_audio_only.py
+        run: generate_audio_from_blog.py
 
       - name: Upload and embed audio in blog post
         run: python upload_audio_and_embed.py
