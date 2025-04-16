@@ -12,8 +12,8 @@ WP_USERNAME = os.getenv("WP_USERNAME")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
 WP_SITE_URL = os.getenv("WP_SITE_URL")
 
-# Set API key properly for v1.x SDK
-openai.api_key = OPENAI_API_KEY
+# Initialize OpenAI client (NEW SDK format)
+client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 # Step 1: Generate blog + summary
 def generate_blog():
@@ -22,7 +22,7 @@ def generate_blog():
         "starting with 'SUMMARY:'."
     )
 
-    response = openai.chat.completions.create(
+    response = client.chat.completions.create(
         model="gpt-4",
         messages=[
             {"role": "system", "content": "You are a helpful assistant that writes blog content."},
@@ -49,7 +49,7 @@ def post_to_wordpress(title, content):
     print("WordPress Response:", response.status_code, response.text)
     response.raise_for_status()
 
-# Step 3: Save summary to file for video generation
+# Step 3: Save summary to file
 def save_summary(summary_text):
     with open("blog_summary.txt", "w") as f:
         f.write(summary_text)
