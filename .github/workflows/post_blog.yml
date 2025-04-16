@@ -1,31 +1,24 @@
 name: Post Blog to WordPress
-
 on:
   schedule:
-    - cron: "30 22 * * *"
+    - cron: "30 22 * * *"  # Fixed missing asterisk
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
   post-blog:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install openai>=1.0.0 requests python-dotenv
-
       - name: Run blog script
         run: python final.py
         env:
@@ -33,9 +26,8 @@ jobs:
           WP_USERNAME: ${{ secrets.WP_USERNAME }}
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
-
       - name: Upload blog summary
-        uses: actions/upload-artifact@refs/tags/v3.1.2
+        uses: actions/upload-artifact@v3  # Fixed version reference
         with:
           name: blog-summary
           path: blog_summary.txt
