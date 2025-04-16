@@ -3,7 +3,7 @@ import requests
 from dotenv import load_dotenv
 
 # Load env
-load_dotenv()
+load_dotenv() 
 
 WP_USERNAME = os.getenv("WP_USERNAME")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
