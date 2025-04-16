@@ -3,7 +3,7 @@ import openai
 import requests
 from dotenv import load_dotenv
 
-# Load .env variables (for local testing)
+# Load environment variables
 load_dotenv()
 
 # Credentials
@@ -12,8 +12,8 @@ WP_USERNAME = os.getenv("WP_USERNAME")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
 WP_SITE_URL = os.getenv("WP_SITE_URL")
 
-# Initialize OpenAI client for v1.x+
-client = openai.OpenAI(api_key=OPENAI_API_KEY)
+# Set API key properly for v1.x SDK
+openai.api_key = OPENAI_API_KEY
 
 # Step 1: Generate blog + summary
 def generate_blog():
@@ -22,7 +22,7 @@ def generate_blog():
         "starting with 'SUMMARY:'."
     )
 
-    response = client.chat.completions.create(
+    response = openai.chat.completions.create(
         model="gpt-4",
         messages=[
             {"role": "system", "content": "You are a helpful assistant that writes blog content."},
