@@ -18,7 +18,7 @@ client = openai.OpenAI(api_key=OPENAI_API_KEY)
 # Step 1: Generate blog + summary
 def generate_blog():
     prompt = (
-        "Write a 600-word blog post on a trending business topic. Then write a 250-word summary "
+        "Write a 250-word blog post on a trending business topic. Then write a 100-word summary "
         "starting with 'SUMMARY:'."
     )
 
