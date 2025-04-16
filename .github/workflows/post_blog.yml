@@ -37,7 +37,7 @@ jobs:
           pip install openai>=1.0.0 requests python-dotenv
      
       - name: Upload blog summary for inspection
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3.1.3
         with:
           name: blog-summary
           path: blog_summary.txt
