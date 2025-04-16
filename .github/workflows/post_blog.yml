@@ -2,7 +2,7 @@ name: Post Blog to WordPress
 
 on:
   schedule:
-    - cron: "0 13 * * *"  # 6 AM MST (Arizona)
+    - cron: "0 13 * * *"  # Runs daily at 6 AM MST
   workflow_dispatch:
 
 permissions:
@@ -26,21 +26,25 @@ jobs:
           python -m pip install --upgrade pip
           pip install openai>=1.0.0 requests python-dotenv gTTS
 
-      - name: Install FFmpeg
-        run: sudo apt-get install -y ffmpeg
-
-      - name: Run blog generation script
+      - name: Run blog and summary generator
+        run: python final.py
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           WP_USERNAME: ${{ secrets.WP_USERNAME }}
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
-        run: python final.py
 
       - name: Generate 30-second video script
         run: python generate_video_script.py
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      - name: Generate video using gTTS and FFmpeg
-        run: python generate_video_with_tts.py
+      - name: Generate voiceover audio (MP3 only)
+        run: python generate_audio_only.py
+
+      - name: Upload audio to WordPress
+        run: python upload_audio_to_wordpress.py
+        env:
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+          WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
