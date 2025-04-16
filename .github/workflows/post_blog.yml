@@ -33,7 +33,9 @@ jobs:
           WP_USERNAME: ${{ secrets.WP_USERNAME }}
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
-
+      - name: Debug - show Python files
+        run: find . -name "*.py"
+        
       - name: Generate 30-second video script
         run: python generate_video_script.py
         env:
