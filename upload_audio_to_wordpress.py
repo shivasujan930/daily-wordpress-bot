@@ -2,25 +2,23 @@ import os
 import requests
 from dotenv import load_dotenv
 
-# Load environment variables
+# Load .env
 load_dotenv()
 
 WP_USERNAME = os.getenv("WP_USERNAME")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
 WP_SITE_URL = os.getenv("WP_SITE_URL")
 
-# File to upload
-file_path = "short_video.mp4"
+file_path = "voiceover.mp3"
 file_name = os.path.basename(file_path)
 media_url = f"{WP_SITE_URL}/wp-json/wp/v2/media"
 
-# Headers for upload
 headers = {
     "Content-Disposition": f"attachment; filename={file_name}",
-    "Content-Type": "video/mp4"
+    "Content-Type": "audio/mpeg"
 }
 
-# Upload video to WordPress
+# Upload
 with open(file_path, 'rb') as f:
     response = requests.post(
         media_url,
@@ -30,9 +28,9 @@ with open(file_path, 'rb') as f:
     )
 
 if response.status_code in [200, 201]:
-    media_info = response.json()
-    print("✅ Video uploaded successfully!")
-    print("🔗 Video URL:", media_info["source_url"])
+    media = response.json()
+    print("✅ Audio uploaded!")
+    print("🔗 URL:", media["source_url"])
 else:
     print("❌ Upload failed:", response.status_code)
     print(response.text)
