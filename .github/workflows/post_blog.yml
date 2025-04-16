@@ -23,10 +23,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install openai>=1.0.0 requests python-dotenv
 
-      - name: Run blog script
+      - name: Run blog + generate video script
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           WP_USERNAME: ${{ secrets.WP_USERNAME }}
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
-        run: python final.py
+        run: |
+          python final.py
+          python generate_video_script.py
