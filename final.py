@@ -1,80 +1,51 @@
 import os
+import openai
 import requests
-from datetime import datetime
-from openai import OpenAI
 from dotenv import load_dotenv
 
-# Load .env (only relevant for local testing)
 load_dotenv()
 
-# Load environment variables
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-WP_USERNAME = os.getenv("WP_USERNAME")
-WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
-WP_SITE_URL = os.getenv("WP_SITE_URL")
+# Load credentials from environment
+openai.api_key = os.getenv("OPENAI_API_KEY")
+wp_username = os.getenv("WP_USERNAME")
+wp_password = os.getenv("WP_APP_PASSWORD")
+wp_site_url = os.getenv("WP_SITE_URL")
 
-# Debug: Show which variables are loaded (without printing actual values)
-print("OPENAI_API_KEY:", bool(OPENAI_API_KEY))
-print("WP_USERNAME:", bool(WP_USERNAME))
-print("WP_APP_PASSWORD:", bool(WP_APP_PASSWORD))
-print("WP_SITE_URL:", bool(WP_SITE_URL))
-
-# Ensure all environment variables are present
-if not all([OPENAI_API_KEY, WP_USERNAME, WP_APP_PASSWORD, WP_SITE_URL]):
-    raise EnvironmentError("Missing one or more required environment variables.")
-
-# Initialize OpenAI client
-client = OpenAI(api_key=OPENAI_API_KEY)
-
+# Step 1: Generate blog content and summary
 def generate_blog():
-    """Generate blog content using GPT model via new OpenAI SDK"""
-    try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a helpful AI writing daily blog posts."},
-                {"role": "user", "content": "Write a 300-word blog post about the latest tech news."}
-            ],
-            temperature=0.7,
-            max_tokens=600
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        print("❌ Error generating blog:", str(e))
-        raise
+    prompt = "Generate a 600-word blog post on a trending business topic and a 250-word summary."
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.7
+    )
+    content = response.choices[0].message["content"]
+    
+    # Split into blog and summary
+    blog, summary = content.split("250-word summary:", 1)
+    return blog.strip(), summary.strip()
 
+# Step 2: Post blog to WordPress
 def post_to_wordpress(title, content):
-    """Publish blog post to WordPress site using REST API"""
-    url = f"{WP_SITE_URL}/wp-json/wp/v2/posts"
-    auth = (WP_USERNAME, WP_APP_PASSWORD)
+    url = f"{wp_site_url}/wp-json/wp/v2/posts"
+    auth = (wp_username, wp_password)
     headers = {"Content-Type": "application/json"}
-
-    payload = {
+    data = {
         "title": title,
         "content": content,
-        "status": "publish"  # Change to "draft" if needed
+        "status": "publish"
     }
+    response = requests.post(url, auth=auth, headers=headers, json=data)
+    print("WordPress response:", response.status_code, response.text)
+    response.raise_for_status()
 
-    try:
-        response = requests.post(url, auth=auth, headers=headers, json=payload)
-        response.raise_for_status()
-        print("✅ Blog posted successfully:", response.json().get("link"))
-    except requests.exceptions.HTTPError as err:
-        print("❌ Failed to post to WordPress:", err.response.text)
-        raise
-    except Exception as e:
-        print("❌ Unexpected error posting to WordPress:", str(e))
-        raise
+# Step 3: Save blog summary for video generation
+def save_summary_to_file(summary):
+    with open("blog_summary.txt", "w") as f:
+        f.write(summary)
 
-def main():
-    print("🚀 Generating blog post...")
-    blog_content = generate_blog()
-
-    today = datetime.now().strftime("%B %d, %Y")
-    title = f"Daily Tech Digest – {today}"
-
-    print("📝 Posting blog to WordPress...")
-    post_to_wordpress(title, blog_content)
-
+# Run
 if __name__ == "__main__":
-    main()
+    blog_text, summary_text = generate_blog()
+    save_summary_to_file(summary_text)
+    post_to_wordpress("Today's Business Insights", blog_text)
