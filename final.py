@@ -12,7 +12,7 @@ WP_USERNAME = os.getenv("WP_USERNAME")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
 WP_SITE_URL = os.getenv("WP_SITE_URL")
 
-# Initialize OpenAI client (NEW SDK format)
+# Initialize OpenAI client (new SDK format)
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 # Step 1: Generate blog + summary
@@ -46,16 +46,24 @@ def post_to_wordpress(title, content):
     }
 
     response = requests.post(post_url, headers=headers, json=payload, auth=(WP_USERNAME, WP_APP_PASSWORD))
-    print("WordPress Response:", response.status_code, response.text)
+    print("📤 WordPress Response:", response.status_code, response.text)
     response.raise_for_status()
 
 # Step 3: Save summary to file
 def save_summary(summary_text):
     with open("blog_summary.txt", "w") as f:
         f.write(summary_text)
+    print("📝 Summary saved to blog_summary.txt")
+
+# Step 4: Save blog to text file (for audio later)
+def save_blog(blog_text):
+    with open("blog_post.txt", "w") as f:
+        f.write(blog_text)
+    print("📝 Blog saved to blog_post.txt")
 
 # Main Execution
 if __name__ == "__main__":
     blog_text, summary_text = generate_blog()
     save_summary(summary_text)
+    save_blog(blog_text)
     post_to_wordpress("Today's Business Insights", blog_text)
