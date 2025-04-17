@@ -64,8 +64,9 @@ def embed_audio_in_latest_post(audio_url):
                 print("⚠️ No content found in the post")
                 current_content = "<p>Financial market update.</p>"
         
-        # Create audio embed HTML
-        audio_embed = f'<p><audio controls><source src="{audio_url}" type="audio/mpeg">Your browser does not support the audio element.</audio></p>'
+        # Create audio embed HTML with introduction text
+        audio_embed = '<p><strong>Prefer to listen? Here\'s an audio version of this article:</strong></p>'
+        audio_embed += f'<p><audio controls><source src="{audio_url}" type="audio/mpeg">Your browser does not support the audio element.</audio></p>'
         
         # Find the position after the title (h1)
         # This pattern looks for the closing </h1> tag
