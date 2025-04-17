@@ -1,0 +1,7 @@
+================================================================================
+VIDEO PROMPT — 2025-04-17 23:57:43
+================================================================================
+**Prompt for AI Video Generation:**
+
+Create a 20-second professional financial news video that highlights the recent surge in U.S. Treasury yields to 4.85%, emphasizing its impact on equity markets. Start with a sleek newsroom backdrop in blue-grey tones, featuring a stock ticker displaying current S&P 500 and Nasdaq declines of 1.75% and 2.25%. Transition to a graph illustrating rising Treasury yields, with quick cuts between visuals and text overlays that highlight key points: "Institutional investors recalibrating risk," "Heightened inflationary pressures," and "Potential Fed rate hike." Conclude with an image of a concerned market analyst, maintaining a corporate tone throughout.
+
