@@ -3,6 +3,8 @@ import json
 import openai
 import requests
 import pytz
+import random
+import time
 from datetime import datetime
 from dotenv import load_dotenv
 from openai import OpenAIError
@@ -86,89 +88,72 @@ def generate_blog():
         return emergency_blog, emergency_summary, emergency_title
 
 
-def extract_finance_keywords(text: str) -> list:
+def get_direct_financial_image() -> str:
     """
-    Extract finance-related keywords from the summary text
-    to create better image search queries.
+    Get a direct financial image URL from a curated list of reliable finance images.
+    These are pre-selected professional finance images that are guaranteed to work.
     """
-    # List of common financial terms to look for
-    financial_terms = [
-        "market", "stock", "economy", "trading", "investment", "finance",
-        "growth", "recession", "inflation", "rates", "fed", "reserve",
-        "bull", "bear", "trend", "volatility", "chart", "graph",
-        "currency", "exchange", "portfolio", "analysis", "bank", "treasury",
-        "bonds", "yield", "equity", "asset", "capital", "wealth", "dollar"
+    # List of reliable, finance-related image URLs
+    financial_images = [
+        "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=1024",  # Stock chart
+        "https://images.unsplash.com/photo-1535320903710-d993d3d77d29?q=80&w=1024",  # Bull statue
+        "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?q=80&w=1024",  # Financial district
+        "https://images.unsplash.com/photo-1560221328-12fe60f83ab8?q=80&w=1024",  # Stock market data
+        "https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?q=80&w=1024",  # Financial newspaper
+        "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1024",  # Stock charts
+        "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=1024",  # Financial graphs
+        "https://images.unsplash.com/photo-1604594849809-dfedbc827105?q=80&w=1024",  # Money and calculator
+        "https://images.unsplash.com/photo-1607921007061-35cf093a049a?q=80&w=1024",  # Business meeting
+        "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?q=80&w=1024"   # Financial chart
     ]
     
-    # Extract words from the text that match financial terms
-    words = text.lower().replace(",", " ").replace(".", " ").split()
-    keywords = [word for word in words if word in financial_terms]
-    
-    # If no financial terms found, use default keywords
-    if not keywords:
-        keywords = ["finance", "market", "business", "professional"]
-    
-    return keywords[:3]  # Limit to top 3 keywords
-
-
-def get_unsplash_finance_image(query: str) -> str:
-    """
-    Get a professional finance image from Unsplash based on the summary content.
-    This is a reliable source of high-quality, free stock photos.
-    """
-    # Create a focused search query based on financial terms in the summary
-    search_terms = query.replace(" ", "+")
-    
-    # Add finance-related terms to ensure relevant images
-    if "market" not in search_terms.lower() and "finance" not in search_terms.lower():
-        search_terms += "+finance"
-    
-    # Use Unsplash source API for a random, relevant finance image
-    image_size = "1024x1024"
-    image_url = f"https://source.unsplash.com/{image_size}/?{search_terms}"
-    
-    # Force a fresh image by adding a cache-busting parameter
-    image_url += f"&cb={os.urandom(4).hex()}"
-    
-    print(f"✅ Using Unsplash image with query: {search_terms}")
+    # Select a random image from the list
+    image_url = random.choice(financial_images)
+    print(f"✅ Using direct financial image URL: {image_url}")
     return image_url
 
 
-def generate_header_image(summary: str) -> str:
-    """
-    Generate a professional finance image based on the summary content.
-    Uses Unsplash for reliable, high-quality stock photos.
-    """
+def download_image(url: str) -> bytes:
+    """Download image from URL and return the binary data"""
     try:
-        # Extract key financial terms from the summary
-        keywords = extract_finance_keywords(summary)
-        query = " ".join(keywords)
-        
-        # Get image URL from Unsplash
-        return get_unsplash_finance_image(query)
-    except Exception as e:
-        print(f"❌ Error generating image: {e}")
-        # Fallback to a general finance image
-        return "https://source.unsplash.com/1024x1024/?finance,business"
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        return response.content
+    except requests.RequestException as e:
+        print(f"❌ Failed to download image: {e}")
+        # If download fails, use a local fallback or an embedded simple image
+        return b''  # Empty bytes
 
 
 def upload_image_to_wordpress(image_url: str) -> dict:
     """Upload an image to WordPress media library from URL"""
     try:
-        img_data = requests.get(image_url).content
-        filename = "header_image.png"
+        # First try to download the image
+        img_data = download_image(image_url)
+        if not img_data:
+            raise Exception("Failed to download image")
+            
+        # Generate a unique filename to avoid caching issues
+        timestamp = int(time.time())
+        filename = f"finance_header_{timestamp}.jpg"
+        
+        # Upload to WordPress
         media = requests.post(
             f"{WP_SITE_URL}/wp-json/wp/v2/media",
             auth=(WP_USERNAME, WP_APP_PASSWORD),
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-            files={"file": (filename, img_data, "image/png")}
+            files={"file": (filename, img_data, "image/jpeg")}
         )
         media.raise_for_status()
-        return media.json()  # -> {"id": ..., "source_url": ...}
-    except requests.RequestException as e:
+        
+        # Return the media object
+        media_obj = media.json()
+        print(f"✅ Uploaded image to WordPress with ID: {media_obj.get('id', 'unknown')}")
+        return media_obj
+    except Exception as e:
         print(f"❌ Failed to upload image to WordPress: {e}")
         # Return dummy data to allow the process to continue
-        return {"id": 0, "source_url": "https://source.unsplash.com/1024x1024/?finance"}
+        return {"id": 0, "source_url": ""}
 
 
 def save_local(blog: str, summary: str):
@@ -210,9 +195,9 @@ if __name__ == "__main__":
         print("Generating blog content...")
         blog_text, summary_text, base_title = generate_blog()
 
-        # 2) Generate and upload image using improved approach
+        # 2) Get reliable image and upload
         print("Creating and uploading header image...")
-        img_url = generate_header_image(summary_text)
+        img_url = get_direct_financial_image()
         media_obj = upload_image_to_wordpress(img_url)
         media_id = media_obj.get("id", 0)
         media_src = media_obj.get("source_url", "")
