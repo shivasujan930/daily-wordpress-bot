@@ -23,7 +23,7 @@ def get_advanced_content_aware_image(blog_text: str, summary_text: str, title: s
         # Interest Rates & Rate Changes
         "interest_rates": [
             "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=1024",  # Rate chart
-            "https://images.unsplash.com/photo-1633158829799-46141628df11?q=80&w=1024"  # Interest rate concept
+            "https://images.unsplash.com/photo-1591696205602-2f950c417cb9?q=80&w=1024"   # Interest rate concept - FIXED URL
         ],
         
         # Market Decline & Bearish News
@@ -76,7 +76,7 @@ def get_advanced_content_aware_image(blog_text: str, summary_text: str, title: s
         
         # Bonds & Treasury Markets
         "bonds": [
-            "https://images.unsplash.com/photo-1633158829799-46141628df11?q=80&w=1024",  # Yield curve concept
+            "https://images.unsplash.com/photo-1591696205602-2f950c417cb9?q=80&w=1024",  # Yield curve concept - FIXED URL
             "https://images.unsplash.com/photo-1518183214770-9cffbec0d3e4?q=80&w=1024"   # Treasury bond concept
         ],
         
@@ -291,6 +291,18 @@ def get_advanced_content_aware_image(blog_text: str, summary_text: str, title: s
     selected_image = random.choice(image_categories[best_category])
     
     print(f"✅ Selected image for category '{best_category}' with {confidence:.2f} confidence")
+    
+    # Add additional fallback to ensure image works
+    try:
+        # Try making a HEAD request to check if the image exists
+        response = requests.head(selected_image, timeout=5)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        print(f"⚠️ Selected image URL is not accessible: {e}")
+        # Fall back to a guaranteed working image
+        selected_image = "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?q=80&w=1024"
+        print(f"⚠️ Falling back to guaranteed working image: {selected_image}")
+    
     return selected_image
 
 
