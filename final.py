@@ -86,51 +86,70 @@ def generate_blog():
         return emergency_blog, emergency_summary, emergency_title
 
 
-def create_image_prompt(summary: str) -> str:
+def extract_finance_keywords(text: str) -> list:
     """
-    Ask GPT‑4o to craft a vivid, poster‑style DALL·E prompt
-    based solely on the 100‑word SUMMARY of your post.
+    Extract finance-related keywords from the summary text
+    to create better image search queries.
     """
-    system = {
-        "role":"system",
-        "content":(
-            "You are an expert prompt engineer for DALL·E. "
-            "Given a short finance article summary, produce a single-sentence, "
-            "highly descriptive, poster‑style image prompt suitable for DALL·E. "
-            "Do NOT include any text overlays in the image."
-        )
-    }
-    user = {"role":"user","content": summary}
+    # List of common financial terms to look for
+    financial_terms = [
+        "market", "stock", "economy", "trading", "investment", "finance",
+        "growth", "recession", "inflation", "rates", "fed", "reserve",
+        "bull", "bear", "trend", "volatility", "chart", "graph",
+        "currency", "exchange", "portfolio", "analysis", "bank", "treasury",
+        "bonds", "yield", "equity", "asset", "capital", "wealth", "dollar"
+    ]
     
-    try:
-        resp = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[system, user],
-            temperature=0.8
-        )
-        prompt_text = resp.choices[0].message.content.strip().strip('"')
-        print("[DEBUG] Generated DALL·E prompt:", prompt_text)
-        return prompt_text
-    except OpenAIError as e:
-        print(f"❌ Failed to create image prompt: {e}")
-        return "A sleek, digital visualization of financial markets with glowing charts and a business professional analyzing data, dramatic lighting"
+    # Extract words from the text that match financial terms
+    words = text.lower().replace(",", " ").replace(".", " ").split()
+    keywords = [word for word in words if word in financial_terms]
+    
+    # If no financial terms found, use default keywords
+    if not keywords:
+        keywords = ["finance", "market", "business", "professional"]
+    
+    return keywords[:3]  # Limit to top 3 keywords
 
 
-def generate_header_image(image_prompt: str) -> str:
+def get_unsplash_finance_image(query: str) -> str:
     """
-    Call DALL·E-2 to render the poster. Fall back to Unsplash if it errors.
+    Get a professional finance image from Unsplash based on the summary content.
+    This is a reliable source of high-quality, free stock photos.
+    """
+    # Create a focused search query based on financial terms in the summary
+    search_terms = query.replace(" ", "+")
+    
+    # Add finance-related terms to ensure relevant images
+    if "market" not in search_terms.lower() and "finance" not in search_terms.lower():
+        search_terms += "+finance"
+    
+    # Use Unsplash source API for a random, relevant finance image
+    image_size = "1024x1024"
+    image_url = f"https://source.unsplash.com/{image_size}/?{search_terms}"
+    
+    # Force a fresh image by adding a cache-busting parameter
+    image_url += f"&cb={os.urandom(4).hex()}"
+    
+    print(f"✅ Using Unsplash image with query: {search_terms}")
+    return image_url
+
+
+def generate_header_image(summary: str) -> str:
+    """
+    Generate a professional finance image based on the summary content.
+    Uses Unsplash for reliable, high-quality stock photos.
     """
     try:
-        resp = client.images.generate(
-            model="dall-e-2",
-            prompt=image_prompt,
-            n=1,
-            size="1024x1024"
-        )
-        return resp.data[0].url
-    except OpenAIError as e:
-        print("❌ DALL·E failed, falling back to Unsplash:", e)
-        return "https://source.unsplash.com/1024x1024/?finance,stock-market"
+        # Extract key financial terms from the summary
+        keywords = extract_finance_keywords(summary)
+        query = " ".join(keywords)
+        
+        # Get image URL from Unsplash
+        return get_unsplash_finance_image(query)
+    except Exception as e:
+        print(f"❌ Error generating image: {e}")
+        # Fallback to a general finance image
+        return "https://source.unsplash.com/1024x1024/?finance,business"
 
 
 def upload_image_to_wordpress(image_url: str) -> dict:
@@ -191,10 +210,9 @@ if __name__ == "__main__":
         print("Generating blog content...")
         blog_text, summary_text, base_title = generate_blog()
 
-        # 2) Prompt → generate image → upload
+        # 2) Generate and upload image using improved approach
         print("Creating and uploading header image...")
-        img_prompt = create_image_prompt(summary_text)
-        img_url = generate_header_image(img_prompt)
+        img_url = generate_header_image(summary_text)
         media_obj = upload_image_to_wordpress(img_url)
         media_id = media_obj.get("id", 0)
         media_src = media_obj.get("source_url", "")
