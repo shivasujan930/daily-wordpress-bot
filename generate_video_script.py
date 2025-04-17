@@ -15,9 +15,15 @@ def read_summary():
     with open("blog_summary.txt", "r", encoding="utf-8") as file:
         return file.read().strip()
 
+# ——— Ensure a file exists —————————————————————————————
+def ensure_file(path):
+    if not os.path.exists(path):
+        # create an empty file
+        with open(path, "w", encoding="utf-8"):
+            pass
+
 # ——— Craft and save a 20‑second video prompt —————————————————
 def generate_video_prompt(summary):
-    # Clear, creative instructions for the video generator:
     prompt_text = (
         "You are a top‑tier video prompt engineer. "
         "Using the following 100‑word summary, craft a single text prompt "
@@ -42,19 +48,22 @@ def generate_video_prompt(summary):
 
     video_prompt = response.choices[0].message.content.strip()
 
-    # — Append to history with timestamp —
+    # — Ensure history file exists, then append —
     history_path = "video_prompt_history.txt"
+    ensure_file(history_path)
     with open(history_path, "a", encoding="utf-8") as hist:
         hist.write("================================================================================\n")
         hist.write(f"VIDEO PROMPT — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
         hist.write("================================================================================\n")
         hist.write(video_prompt + "\n\n")
 
-    # — Save latest prompt —
-    with open("video_prompt.txt", "w", encoding="utf-8") as f:
+    # — Ensure latest prompt file exists, then overwrite —
+    latest_path = "video_prompt.txt"
+    ensure_file(latest_path)
+    with open(latest_path, "w", encoding="utf-8") as f:
         f.write(video_prompt)
 
-    print("\n✅ 20‑second video prompt generated and appended to 'video_prompt_history.txt'.")
+    print("\n✅ 20‑second video prompt generated and saved.")
 
 # ——— Main execution ————————————————————————————————
 if __name__ == "__main__":
