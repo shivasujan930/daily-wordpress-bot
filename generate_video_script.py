@@ -1,5 +1,6 @@
 import openai
 import os
+from datetime import datetime
 from dotenv import load_dotenv
 
 # Load credentials
@@ -11,35 +12,43 @@ client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 # Read summary from file
 def read_summary():
-    with open("blog_summary.txt", "r") as file:
+    with open("blog_summary.txt", "r", encoding="utf-8") as file:
         return file.read()
 
-# Generate short video script
-def generate_video_script(summary_text):
+# Generate and save/append the video script
+def generate_video_script(summary):
     prompt = (
-        "Convert the following 250-word blog summary into a 30-second social media video script. "
-        "Use a casual, engaging tone. Include a brief hook at the beginning, 2-3 main points, and a call-to-action.\n\n"
-        f"SUMMARY:\n{summary_text}"
+        "Using the following 100-word summary, write a 30-second video script "
+        "suitable for a professional financial news reel:\n\n"
+        f"{summary}\n\n"
+        "The script should be concise, engaging, and include cues for on-screen text."
     )
-
     response = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "You write scripts for social media videos."},
+            {"role": "system", "content": "You are a professional video script writer."},
             {"role": "user", "content": prompt}
         ],
-        temperature=0.8
+        temperature=0.7
     )
 
     script = response.choices[0].message.content.strip()
 
-    # Save script
-    with open("video_script.txt", "w") as f:
+    # Append to history file with timestamp
+    history_path = "video_script_history.txt"
+    with open(history_path, "a", encoding="utf-8") as hist:
+        hist.write("================================================================================\n")
+        hist.write(f"VIDEO SCRIPT — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        hist.write("================================================================================\n")
+        hist.write(script + "\n\n")
+
+    # Also save the latest script to a separate file
+    with open("video_script.txt", "w", encoding="utf-8") as f:
         f.write(script)
 
-    print("\n✅ 30-second video script generated and saved as 'video_script.txt'.")
+    print("\n✅ 30-second video script generated and appended to 'video_script_history.txt'.")
 
-# Main
+# Main execution
 if __name__ == "__main__":
     summary = read_summary()
     generate_video_script(summary)
