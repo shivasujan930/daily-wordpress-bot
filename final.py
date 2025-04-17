@@ -5,6 +5,7 @@ import requests
 import pytz
 import random
 import time
+import re
 from datetime import datetime
 from dotenv import load_dotenv
 from openai import OpenAIError
@@ -88,29 +89,76 @@ def generate_blog():
         return emergency_blog, emergency_summary, emergency_title
 
 
-def get_direct_financial_image() -> str:
+def get_content_aware_image(blog_text: str, summary_text: str, title: str) -> str:
     """
-    Get a direct financial image URL from a curated list of reliable finance images.
-    These are pre-selected professional finance images that are guaranteed to work.
+    Select the most appropriate financial image based on the content of the blog post.
     """
-    # List of reliable, finance-related image URLs
-    financial_images = [
-        "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=1024",  # Stock chart
-        "https://images.unsplash.com/photo-1535320903710-d993d3d77d29?q=80&w=1024",  # Bull statue
-        "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?q=80&w=1024",  # Financial district
-        "https://images.unsplash.com/photo-1560221328-12fe60f83ab8?q=80&w=1024",  # Stock market data
-        "https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?q=80&w=1024",  # Financial newspaper
-        "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1024",  # Stock charts
-        "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=1024",  # Financial graphs
-        "https://images.unsplash.com/photo-1604594849809-dfedbc827105?q=80&w=1024",  # Money and calculator
-        "https://images.unsplash.com/photo-1607921007061-35cf093a049a?q=80&w=1024",  # Business meeting
-        "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?q=80&w=1024"   # Financial chart
-    ]
+    # Define categories with corresponding images
+    image_categories = {
+        # Market Performance & General Finance
+        "general": [
+            "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?q=80&w=1024",  # Financial chart
+            "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?q=80&w=1024"   # Financial district
+        ],
+        
+        # Federal Reserve & Interest Rates
+        "fed_rates": [
+            "https://images.unsplash.com/photo-1589758438368-0ad531db3366?q=80&w=1024",  # Federal Reserve building
+            "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=1024"   # Rate chart
+        ],
+        
+        # Market Volatility & Bearish News
+        "market_decline": [
+            "https://images.unsplash.com/photo-1563986768494-4dee2763ff3f?q=80&w=1024",  # Downward chart
+            "https://images.unsplash.com/photo-1574607383476-f517f260d30b?q=80&w=1024"   # Bear market concept
+        ],
+        
+        # Growth & Bullish News
+        "market_growth": [
+            "https://images.unsplash.com/photo-1535320903710-d993d3d77d29?q=80&w=1024",  # Bull statue
+            "https://images.unsplash.com/photo-1560221328-12fe60f83ab8?q=80&w=1024"     # Upward graph
+        ],
+        
+        # Technology & Innovation
+        "tech_innovation": [
+            "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1024",  # Tech visualization
+            "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1024"   # Tech with charts
+        ]
+    }
     
-    # Select a random image from the list
-    image_url = random.choice(financial_images)
-    print(f"✅ Using direct financial image URL: {image_url}")
-    return image_url
+    # Combine all text for analysis
+    all_text = f"{title} {summary_text} {blog_text}".lower()
+    
+    # Define keywords for each category
+    category_keywords = {
+        "fed_rates": ["fed", "federal reserve", "interest rate", "rates", "powell", "monetary policy", "inflation", "hike", "cut"],
+        "market_decline": ["decline", "drop", "fall", "bearish", "downturn", "recession", "crisis", "plunge", "correction", "crash"],
+        "market_growth": ["growth", "surge", "rally", "bullish", "upturn", "recovery", "gains", "positive", "upward"],
+        "tech_innovation": ["tech", "technology", "ai", "artificial intelligence", "digital", "innovation", "startup", "software", "crypto"]
+    }
+    
+    # Score each category based on keyword matches
+    category_scores = {"general": 1}  # Give general a base score
+    
+    for category, keywords in category_keywords.items():
+        score = 0
+        for keyword in keywords:
+            if keyword in all_text:
+                score += 1
+                # Give extra weight to keywords in the title
+                if keyword in title.lower():
+                    score += 2
+        
+        category_scores[category] = score
+    
+    # Select the category with the highest score
+    best_category = max(category_scores.items(), key=lambda x: x[1])[0]
+    
+    # Pick a random image from the best category
+    selected_image = random.choice(image_categories[best_category])
+    
+    print(f"✅ Selected image for category '{best_category}' based on content analysis")
+    return selected_image
 
 
 def download_image(url: str) -> bytes:
@@ -121,8 +169,8 @@ def download_image(url: str) -> bytes:
         return response.content
     except requests.RequestException as e:
         print(f"❌ Failed to download image: {e}")
-        # If download fails, use a local fallback or an embedded simple image
-        return b''  # Empty bytes
+        # If download fails, return empty bytes
+        return b''
 
 
 def upload_image_to_wordpress(image_url: str) -> dict:
@@ -195,9 +243,9 @@ if __name__ == "__main__":
         print("Generating blog content...")
         blog_text, summary_text, base_title = generate_blog()
 
-        # 2) Get reliable image and upload
-        print("Creating and uploading header image...")
-        img_url = get_direct_financial_image()
+        # 2) Get content-aware image and upload
+        print("Selecting and uploading relevant header image...")
+        img_url = get_content_aware_image(blog_text, summary_text, base_title)
         media_obj = upload_image_to_wordpress(img_url)
         media_id = media_obj.get("id", 0)
         media_src = media_obj.get("source_url", "")
