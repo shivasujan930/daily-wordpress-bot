@@ -1,5 +1,6 @@
 import os
 import requests
+import re
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -32,7 +33,7 @@ def upload_audio_to_wp(file_path):
         print(f"❌ Failed to upload audio: {e}")
         return None
 
-# Step 2: Embed audio at the beginning of the latest published post
+# Step 2: Embed audio right after the title in the latest published post
 def embed_audio_in_latest_post(audio_url):
     if not audio_url:
         print("❌ No audio URL provided, cannot embed")
@@ -63,9 +64,32 @@ def embed_audio_in_latest_post(audio_url):
                 print("⚠️ No content found in the post")
                 current_content = "<p>Financial market update.</p>"
         
-        # Embed audio at the beginning
+        # Create audio embed HTML
         audio_embed = f'<p><audio controls><source src="{audio_url}" type="audio/mpeg">Your browser does not support the audio element.</audio></p>'
-        updated_content = audio_embed + "\n\n" + current_content
+        
+        # Find the position after the title (h1)
+        # This pattern looks for the closing </h1> tag
+        title_pattern = r'</h1>'
+        match = re.search(title_pattern, current_content)
+        
+        if match:
+            # Insert audio player right after the </h1> tag
+            insert_position = match.end()
+            updated_content = current_content[:insert_position] + "\n\n" + audio_embed + "\n\n" + current_content[insert_position:]
+            print("🎯 Inserting audio after the title (h1 tag)")
+        else:
+            # Fallback - insert after the header div if title not found
+            header_div_pattern = r'</div>\s*</div>\s*</div>'
+            match = re.search(header_div_pattern, current_content)
+            
+            if match:
+                insert_position = match.end()
+                updated_content = current_content[:insert_position] + "\n\n" + audio_embed + "\n\n" + current_content[insert_position:]
+                print("🎯 Inserting audio after the header div")
+            else:
+                # Last resort - insert at the beginning
+                updated_content = audio_embed + "\n\n" + current_content
+                print("⚠️ Could not find title or header position, adding audio at the beginning")
         
         # Update the post
         update_payload = {"content": updated_content}
