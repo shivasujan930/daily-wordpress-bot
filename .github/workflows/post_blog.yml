@@ -2,7 +2,7 @@ name: Post Blog to WordPress
 
 on:
   schedule:
-    - cron: "00 17 * * *"  # Runs daily at 1:00 PM EDT / 10:00 AM MST
+    - cron: "00 17 * * *"  # Daily at 1:00 PM EDT
   workflow_dispatch:
 
 permissions:
@@ -31,7 +31,7 @@ jobs:
       - name: Debug — list Python files
         run: find . -name "*.py"
 
-      # 1️⃣ Generate blog + summary and post
+      # 1️⃣ Blog and summary generation
       - name: Run blog and summary generator
         run: python final.py
         env:
@@ -40,51 +40,54 @@ jobs:
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL:     ${{ secrets.WP_SITE_URL }}
 
-      # 2️⃣ Generate voiceover from blog
+      # 2️⃣ Blog voiceover
       - name: Generate blog voiceover
         run: python generate_audio_from_blog.py
 
-      - name: Upload and embed audio in blog post
+      - name: Upload blog audio to WordPress
         run: python upload_audio_and_embed.py
         env:
           WP_USERNAME:     ${{ secrets.WP_USERNAME }}
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL:     ${{ secrets.WP_SITE_URL }}
 
-      # 3️⃣ Generate 20s voiceover script for video
+      # 3️⃣ Video narration
       - name: Generate voiceover script for video
         run: python generate_video_prompt.py
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # 4️⃣ Generate voiceover audio for video
       - name: Generate video voiceover
         run: python generate_audio_for_video.py
 
-      # 5️⃣ Convert narration to visual prompts
-      - name: Generate DALL·E visual prompts from script
+      # 4️⃣ AI visuals
+      - name: Generate DALL·E visual prompts
         run: python generate_visual_prompts.py
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # 6️⃣ (Next: Generate images from prompts)
-      # - name: Generate images using DALL·E
-      #   run: python generate_ai_images.py
+      - name: Generate AI images from prompts
+        run: python generate_ai_images.py
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # 7️⃣ (Next: Generate final video)
-      # - name: Create video from images + audio
-      #   run: python generate_video_from_images.py
+      # 5️⃣ Final video
+      - name: Create video from images + voiceover
+        run: python generate_video_from_images.py
 
-      # 8️⃣ Commit history
+      - name: Upload video to WordPress and embed in post
+        run: python upload_video_to_wp.py
+        env:
+          WP_USERNAME:     ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+          WP_SITE_URL:     ${{ secrets.WP_SITE_URL }}
+
+      # 6️⃣ Commit logs
       - name: Commit history logs
         if: success()
         run: |
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "actions@github.com"
-          git add blog_history.txt video_prompt_history.txt
+          git add blog_history.txt video_prompt_history.txt visual_prompt_history.txt
           git commit -m "Update history logs [skip ci]" || echo "No changes to commit"
           git push
-      - name: Generate AI images from visual prompts
-        run: python generate_ai_images.py
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
