@@ -8,7 +8,7 @@ AUDIO_FILE = "voiceover.mp3"
 OUTPUT = "video_output.mp4"
 TEMP_DIR = "temp_frames"
 
-# ——— Create intermediate frame videos ————————————————————
+# ——— Create individual videos from each image ——————————————————
 def create_video_from_images(image_files, slide_duration=5):
     os.makedirs(TEMP_DIR, exist_ok=True)
 
@@ -18,14 +18,14 @@ def create_video_from_images(image_files, slide_duration=5):
             ffmpeg
             .input(img_path, loop=1, t=slide_duration)
             .filter('scale', 1080, -1)
-            .output(output_path, vcodec='libx264', pix_fmt='yuv420p')
+            .output(output_path, vcodec='libx264', pix_fmt='yuv420p', movflags='faststart')
             .overwrite_output()
             .run()
         )
         print(f"✅ Created slide video: {output_path}")
     return sorted(glob(f"{TEMP_DIR}/slide_*.mp4"))
 
-# ——— Combine video slides ————————————————————————————————
+# ——— Concatenate all slide videos ————————————————————————
 def concatenate_videos(video_files):
     list_file = "concat_list.txt"
     with open(list_file, "w") as f:
@@ -42,25 +42,26 @@ def concatenate_videos(video_files):
     )
     return output_path
 
-# ——— Merge slides + audio ————————————————————————————————
+# ——— Merge concatenated video with audio ————————————————————
 def add_audio_to_video(video_path, audio_path, output_path):
+    video_input = ffmpeg.input(video_path)
+    audio_input = ffmpeg.input(audio_path)
+
     (
         ffmpeg
-        .input(video_path)
-        .input(audio_path)
-        .output(output_path, vcodec='libx264', acodec='aac', strict='experimental')
+        .output(video_input, audio_input, output_path, vcodec='libx264', acodec='aac', strict='experimental')
         .overwrite_output()
         .run()
     )
+    print(f"✅ Final video with audio saved to {output_path}")
 
-# ——— Main ————————————————————————————————————————————————
+# ——— Main workflow ————————————————————————————————————————
 if __name__ == "__main__":
     image_files = natsorted(glob(f"{IMG_DIR}/scene_*.png"))
     if not image_files:
-        print("❌ No images found.")
+        print("❌ No images found in ai_images/. Cannot generate video.")
         exit(1)
 
     slide_videos = create_video_from_images(image_files, slide_duration=5)
     merged_video = concatenate_videos(slide_videos)
     add_audio_to_video(merged_video, AUDIO_FILE, OUTPUT)
-    print(f"✅ Final video saved to {OUTPUT}")
