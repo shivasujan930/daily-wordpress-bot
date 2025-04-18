@@ -5,3 +5,8 @@ VIDEO PROMPT — 2025-04-17 23:57:43
 
 Create a 20-second professional financial news video that highlights the recent surge in U.S. Treasury yields to 4.85%, emphasizing its impact on equity markets. Start with a sleek newsroom backdrop in blue-grey tones, featuring a stock ticker displaying current S&P 500 and Nasdaq declines of 1.75% and 2.25%. Transition to a graph illustrating rising Treasury yields, with quick cuts between visuals and text overlays that highlight key points: "Institutional investors recalibrating risk," "Heightened inflationary pressures," and "Potential Fed rate hike." Conclude with an image of a concerned market analyst, maintaining a corporate tone throughout.
 
+================================================================================
+VIDEO PROMPT — 2025-04-18 17:21:52
+================================================================================
+**Prompt:** Create a 20-second professional financial news video with a sleek, corporate feel using a blue-grey color palette. Begin with a dynamic newsroom b-roll featuring anchors discussing the Federal Reserve's latest rate hike to 5.25%-5.50%. Use quick cuts to a stock ticker showing the S&P 500 down 0.7% and a graph illustrating 10-year Treasury yields rising to 4.85%. Overlay on-screen text highlighting "U.S. Dollar Strength & Challenges for Emerging Markets." Transition to visuals of global maps and economic data charts, emphasizing rising geopolitical risks. Conclude with a call to action for institutional investors to monitor Fed policy signals. Use upbeat music to maintain pacing.
+
