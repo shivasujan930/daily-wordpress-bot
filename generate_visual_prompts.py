@@ -1,5 +1,6 @@
 import openai
 import os
+from datetime import datetime
 from dotenv import load_dotenv
 
 # ——— Load credentials ———————————————————————————————
@@ -16,7 +17,6 @@ def load_narration():
 # ——— Split into sentences ——————————————————————————————————
 def split_into_scenes(script_text):
     import re
-    # Split by sentence-ending punctuation
     return [s.strip() for s in re.split(r'[.?!]\s+', script_text) if s.strip()]
 
 # ——— Generate visual prompt for each scene —————————————————
@@ -40,14 +40,24 @@ def generate_visual_prompt(sentence):
 
     return response.choices[0].message.content.strip()
 
-# ——— Save visual prompts ————————————————————————————————
-def save_prompts(prompts):
+# ——— Save visual prompts as individual files ——————————————————
+def save_individual_prompts(prompts):
     os.makedirs("visual_prompts", exist_ok=True)
     for i, prompt in enumerate(prompts, start=1):
         filename = f"visual_prompts/scene_{i}.txt"
         with open(filename, "w", encoding="utf-8") as f:
             f.write(prompt)
     print(f"✅ Saved {len(prompts)} visual prompts in /visual_prompts")
+
+# ——— Save to central visual prompt history ——————————————————
+def save_to_history_file(prompts):
+    with open("visual_prompt_history.txt", "a", encoding="utf-8") as f:
+        f.write("================================================================================\n")
+        f.write(f"VISUAL PROMPTS — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write("================================================================================\n")
+        for i, prompt in enumerate(prompts, 1):
+            f.write(f"[Scene {i}] {prompt}\n\n")
+    print("📝 Appended all prompts to visual_prompt_history.txt")
 
 # ——— Main execution ————————————————————————————————
 if __name__ == "__main__":
@@ -61,4 +71,5 @@ if __name__ == "__main__":
         print(f"   → 🎨 {prompt}")
         visual_prompts.append(prompt)
     
-    save_prompts(visual_prompts)
+    save_individual_prompts(visual_prompts)
+    save_to_history_file(visual_prompts)
