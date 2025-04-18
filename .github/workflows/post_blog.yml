@@ -2,7 +2,7 @@ name: Post Blog to WordPress
 
 on:
   schedule:
-    - cron: "00 17 * * *"  # Daily at 1:00 PM EDT
+    - cron: "00 17 * * *"  # Daily at 1:00 PM EDT / 10:00 AM MST
   workflow_dispatch:
 
 permissions:
@@ -26,12 +26,14 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytz requests python-dotenv openai>=1.0.0 gTTS moviepy pillow
+          pip install pytz requests python-dotenv openai>=1.0.0 gTTS
+          pip install moviepy
+          pip install imageio[ffmpeg] pillow
 
       - name: Debug — list Python files
         run: find . -name "*.py"
 
-      # 1️⃣ Blog and summary generation
+      # 1️⃣ Blog generation
       - name: Run blog and summary generator
         run: python final.py
         env:
@@ -51,7 +53,7 @@ jobs:
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL:     ${{ secrets.WP_SITE_URL }}
 
-      # 3️⃣ Video narration
+      # 3️⃣ Video voiceover (script + audio)
       - name: Generate voiceover script for video
         run: python generate_video_prompt.py
         env:
@@ -60,7 +62,7 @@ jobs:
       - name: Generate video voiceover
         run: python generate_audio_for_video.py
 
-      # 4️⃣ AI visuals
+      # 4️⃣ AI Visuals
       - name: Generate DALL·E visual prompts
         run: python generate_visual_prompts.py
         env:
@@ -71,7 +73,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # 5️⃣ Final video
+      # 5️⃣ Final Video
       - name: Create video from images + voiceover
         run: python generate_video_from_images.py
 
