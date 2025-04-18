@@ -26,12 +26,12 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytz requests python-dotenv openai>=1.0.0 gTTS moviepy
+          pip install pytz requests python-dotenv openai>=1.0.0 gTTS moviepy pillow
 
       - name: Debug — list Python files
         run: find . -name "*.py"
 
-      # 1️⃣ Generate blog content + post to WordPress
+      # 1️⃣ Generate blog + summary and post
       - name: Run blog and summary generator
         run: python final.py
         env:
@@ -40,11 +40,10 @@ jobs:
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL:     ${{ secrets.WP_SITE_URL }}
 
-      # 2️⃣ Generate voiceover for blog
+      # 2️⃣ Generate voiceover from blog
       - name: Generate blog voiceover
         run: python generate_audio_from_blog.py
 
-      # 3️⃣ Upload blog audio to WordPress
       - name: Upload and embed audio in blog post
         run: python upload_audio_and_embed.py
         env:
@@ -52,22 +51,31 @@ jobs:
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL:     ${{ secrets.WP_SITE_URL }}
 
-      # 4️⃣ Generate 20s video voiceover script from summary
+      # 3️⃣ Generate 20s voiceover script for video
       - name: Generate voiceover script for video
         run: python generate_video_prompt.py
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # 5️⃣ Generate voiceover audio for video
+      # 4️⃣ Generate voiceover audio for video
       - name: Generate video voiceover
         run: python generate_audio_for_video.py
 
-      # (Coming soon)
-      # 6️⃣ Generate video from script + voiceover
-      # - name: Generate video with subtitles
-      #   run: python generate_video_from_script.py
+      # 5️⃣ Convert narration to visual prompts
+      - name: Generate DALL·E visual prompts from script
+        run: python generate_visual_prompts.py
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # 7️⃣ Commit logs
+      # 6️⃣ (Next: Generate images from prompts)
+      # - name: Generate images using DALL·E
+      #   run: python generate_ai_images.py
+
+      # 7️⃣ (Next: Generate final video)
+      # - name: Create video from images + audio
+      #   run: python generate_video_from_images.py
+
+      # 8️⃣ Commit history
       - name: Commit history logs
         if: success()
         run: |
