@@ -84,3 +84,7 @@ jobs:
           git add blog_history.txt video_prompt_history.txt
           git commit -m "Update history logs [skip ci]" || echo "No changes to commit"
           git push
+      - name: Generate AI images from visual prompts
+        run: python generate_ai_images.py
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
