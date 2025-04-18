@@ -11,6 +11,9 @@ permissions:
 jobs:
   post-blog:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: Checkout code
@@ -18,80 +21,94 @@ jobs:
         with:
           persist-credentials: true
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      # ✅ Install all dependencies including FFmpeg (CRUCIAL FIX)
-      - name: Install dependencies
+      - name: Set up Python & dependencies (via virtualenv)
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg  # system-level dependency for video export
+          sudo apt-get install -y ffmpeg
+          python3 -m venv .venv
+          source .venv/bin/activate
           python -m pip install --upgrade pip
           pip install --no-cache-dir pytz requests python-dotenv openai>=1.0.0 gTTS
           pip install --no-cache-dir moviepy imageio[ffmpeg] pillow
 
-      # ✅ Confirm moviepy installed
-      - name: Verify MoviePy installation
-        run: python -c "import moviepy.editor; print('✅ moviepy.editor imported successfully')"
+      - name: Verify moviepy can be imported
+        run: |
+          source .venv/bin/activate
+          python -c "from moviepy.editor import *; print('✅ moviepy.editor imported successfully')"
 
-      # Debug: Show Python files in the repo
       - name: Debug — list Python files
         run: find . -name "*.py"
 
-      # 1️⃣ Generate blog and summary
+      # 1️⃣ Blog generation
       - name: Run blog and summary generator
-        run: python final.py
+        run: |
+          source .venv/bin/activate
+          python final.py
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           WP_USERNAME:     ${{ secrets.WP_USERNAME }}
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL:     ${{ secrets.WP_SITE_URL }}
 
-      # 2️⃣ Generate blog voiceover
+      # 2️⃣ Blog voiceover
       - name: Generate blog voiceover
-        run: python generate_audio_from_blog.py
+        run: |
+          source .venv/bin/activate
+          python generate_audio_from_blog.py
 
       - name: Upload blog audio to WordPress
-        run: python upload_audio_and_embed.py
+        run: |
+          source .venv/bin/activate
+          python upload_audio_and_embed.py
         env:
           WP_USERNAME:     ${{ secrets.WP_USERNAME }}
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL:     ${{ secrets.WP_SITE_URL }}
 
-      # 3️⃣ Generate 20s script and voiceover
-      - name: Generate voiceover script for video
-        run: python generate_video_prompt.py
+      # 3️⃣ Video script + voiceover
+      - name: Generate 20s voiceover script
+        run: |
+          source .venv/bin/activate
+          python generate_video_prompt.py
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Generate video voiceover
-        run: python generate_audio_for_video.py
+        run: |
+          source .venv/bin/activate
+          python generate_audio_for_video.py
 
       # 4️⃣ AI visuals
-      - name: Generate DALL·E visual prompts
-        run: python generate_visual_prompts.py
+      - name: Generate visual prompts
+        run: |
+          source .venv/bin/activate
+          python generate_visual_prompts.py
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      - name: Generate AI images from prompts
-        run: python generate_ai_images.py
+      - name: Generate AI images using DALL·E
+        run: |
+          source .venv/bin/activate
+          python generate_ai_images.py
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # 5️⃣ Build final video
+      # 5️⃣ Final video creation
       - name: Create video from images + voiceover
-        run: python generate_video_from_images.py
+        run: |
+          source .venv/bin/activate
+          python generate_video_from_images.py
 
-      - name: Upload video to WordPress and embed in post
-        run: python upload_video_to_wp.py
+      - name: Upload video to WordPress
+        run: |
+          source .venv/bin/activate
+          python upload_video_to_wp.py
         env:
           WP_USERNAME:     ${{ secrets.WP_USERNAME }}
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL:     ${{ secrets.WP_SITE_URL }}
 
-      # 6️⃣ Commit history logs
+      # 6️⃣ Commit logs
       - name: Commit history logs
         if: success()
         run: |
