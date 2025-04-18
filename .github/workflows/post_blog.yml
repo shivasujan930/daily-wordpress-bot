@@ -23,20 +23,24 @@ jobs:
         with:
           python-version: '3.11'
 
+      # ✅ Install all dependencies including FFmpeg (CRUCIAL FIX)
       - name: Install dependencies
         run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg  # system-level dependency for video export
           python -m pip install --upgrade pip
           pip install --no-cache-dir pytz requests python-dotenv openai>=1.0.0 gTTS
-          pip install --no-cache-dir moviepy
-          pip install --no-cache-dir imageio[ffmpeg] pillow
+          pip install --no-cache-dir moviepy imageio[ffmpeg] pillow
 
+      # ✅ Confirm moviepy installed
       - name: Verify MoviePy installation
-        run: python -m pip show moviepy
+        run: python -c "import moviepy.editor; print('✅ moviepy.editor imported successfully')"
 
+      # Debug: Show Python files in the repo
       - name: Debug — list Python files
         run: find . -name "*.py"
 
-      # 1️⃣ Blog generation
+      # 1️⃣ Generate blog and summary
       - name: Run blog and summary generator
         run: python final.py
         env:
@@ -45,7 +49,7 @@ jobs:
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL:     ${{ secrets.WP_SITE_URL }}
 
-      # 2️⃣ Blog voiceover
+      # 2️⃣ Generate blog voiceover
       - name: Generate blog voiceover
         run: python generate_audio_from_blog.py
 
@@ -56,7 +60,7 @@ jobs:
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL:     ${{ secrets.WP_SITE_URL }}
 
-      # 3️⃣ Video narration
+      # 3️⃣ Generate 20s script and voiceover
       - name: Generate voiceover script for video
         run: python generate_video_prompt.py
         env:
@@ -65,7 +69,7 @@ jobs:
       - name: Generate video voiceover
         run: python generate_audio_for_video.py
 
-      # 4️⃣ AI Visuals
+      # 4️⃣ AI visuals
       - name: Generate DALL·E visual prompts
         run: python generate_visual_prompts.py
         env:
@@ -76,7 +80,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # 5️⃣ Final Video
+      # 5️⃣ Build final video
       - name: Create video from images + voiceover
         run: python generate_video_from_images.py
 
@@ -87,7 +91,7 @@ jobs:
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL:     ${{ secrets.WP_SITE_URL }}
 
-      # 6️⃣ Commit logs
+      # 6️⃣ Commit history logs
       - name: Commit history logs
         if: success()
         run: |
