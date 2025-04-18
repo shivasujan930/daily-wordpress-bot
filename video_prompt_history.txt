@@ -10,3 +10,8 @@ VIDEO PROMPT — 2025-04-18 17:21:52
 ================================================================================
 **Prompt:** Create a 20-second professional financial news video with a sleek, corporate feel using a blue-grey color palette. Begin with a dynamic newsroom b-roll featuring anchors discussing the Federal Reserve's latest rate hike to 5.25%-5.50%. Use quick cuts to a stock ticker showing the S&P 500 down 0.7% and a graph illustrating 10-year Treasury yields rising to 4.85%. Overlay on-screen text highlighting "U.S. Dollar Strength & Challenges for Emerging Markets." Transition to visuals of global maps and economic data charts, emphasizing rising geopolitical risks. Conclude with a call to action for institutional investors to monitor Fed policy signals. Use upbeat music to maintain pacing.
 
+================================================================================
+VOICEOVER SCRIPT — 2025-04-18 22:56:17
+================================================================================
+U.S. markets experienced a slight pullback today, with the S&P 500 down 0.3% and the Dow dipping 0.2%. Investors are wary of potential interest rate hikes from the Federal Reserve, as the 10-year Treasury yield climbed to 4.85%. Geopolitical tensions in the Middle East are raising inflationary concerns, affecting energy prices and corporate margins. Meanwhile, the U.S. dollar index strengthened to 106.70, bolstered by robust economic data. Institutional investors should watch energy market trends and corporate earnings for insights into the economic landscape.
+
