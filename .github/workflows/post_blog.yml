@@ -2,7 +2,7 @@ name: Post Blog to WordPress
 
 on:
   schedule:
-    - cron: "00 17 * * *"
+    - cron: "00 17 * * *"  # Daily at 1:00 PM EDT / 10:00 AM MST
   workflow_dispatch:
 
 permissions:
@@ -22,13 +22,15 @@ jobs:
           sudo apt-get install -y ffmpeg
           python3 -m venv .venv
           .venv/bin/pip install --upgrade pip
-          .venv/bin/pip install --no-cache-dir pytz requests python-dotenv openai>=1.0.0 gTTS
-          .venv/bin/pip install --no-cache-dir moviepy imageio[ffmpeg] pillow
-
-      - name: Verify moviepy import
+          .venv/bin/pip install --no-cache-dir \
+            pytz requests python-dotenv openai>=1.0.0 gTTS \
+            ffmpeg-python natsort pillow imageio
+          
+      - name: Verify ffmpeg-python is importable
         run: |
-          .venv/bin/python -c "from moviepy.editor import *; print('✅ moviepy.editor import worked')"
+          .venv/bin/python -c "import ffmpeg; print('✅ ffmpeg-python works')"
 
+      # 1️⃣ Blog generation
       - name: Run blog and summary generator
         run: .venv/bin/python final.py
         env:
@@ -37,17 +39,19 @@ jobs:
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL:     ${{ secrets.WP_SITE_URL }}
 
+      # 2️⃣ Blog voiceover
       - name: Generate blog voiceover
         run: .venv/bin/python generate_audio_from_blog.py
 
-      - name: Upload blog audio
+      - name: Upload blog audio to WordPress
         run: .venv/bin/python upload_audio_and_embed.py
         env:
           WP_USERNAME:     ${{ secrets.WP_USERNAME }}
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL:     ${{ secrets.WP_SITE_URL }}
 
-      - name: Generate video narration script
+      # 3️⃣ Video script + voiceover
+      - name: Generate 20s video narration
         run: .venv/bin/python generate_video_prompt.py
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -55,17 +59,19 @@ jobs:
       - name: Generate video voiceover
         run: .venv/bin/python generate_audio_for_video.py
 
+      # 4️⃣ Visuals from DALL·E
       - name: Generate visual prompts
         run: .venv/bin/python generate_visual_prompts.py
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      - name: Generate AI images using DALL·E
+      - name: Generate AI images
         run: .venv/bin/python generate_ai_images.py
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      - name: Create video from images + voiceover
+      # 5️⃣ Build final video using ffmpeg-python
+      - name: Create video from images and audio
         run: .venv/bin/python generate_video_from_images.py
 
       - name: Upload video to WordPress
@@ -75,6 +81,7 @@ jobs:
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL:     ${{ secrets.WP_SITE_URL }}
 
+      # 6️⃣ Commit logs
       - name: Commit history logs
         if: success()
         run: |
