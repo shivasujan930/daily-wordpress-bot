@@ -33,7 +33,7 @@ def upload_video():
         print(f"❌ Failed to upload video: {response.text}")
         return None
 
-# ——— Embed video in the latest blog post ——————————————
+# ——— Embed video in latest blog post ——————————————————
 def embed_video(video_url):
     auth = base64.b64encode(f"{WP_USERNAME}:{WP_APP_PASSWORD}".encode()).decode()
     headers = {
@@ -41,15 +41,16 @@ def embed_video(video_url):
         "Content-Type": "application/json"
     }
 
-    # Get most recent post ID
+    # Get most recent post
     posts = requests.get(f"{WP_SITE_URL}/wp-json/wp/v2/posts", headers=headers).json()
     if not posts:
         print("❌ No posts found.")
         return
-    post_id = posts[0]['id']
-    content = posts[0]['content']['raw']
 
-    # Embed video at the top of the post
+    post_id = posts[0]['id']
+    content = posts[0]['content']['rendered']  # ✅ FIXED
+
+    # Embed video HTML at the top
     new_content = f'<video controls width="100%">\n  <source src="{video_url}" type="video/mp4">\n</video>\n\n{content}'
     payload = {"content": new_content}
 
@@ -60,7 +61,7 @@ def embed_video(video_url):
     else:
         print(f"❌ Failed to embed video: {resp.text}")
 
-# ——— Main execution ——————————————————————————
+# ——— Main Execution ————————————————————————————
 if __name__ == "__main__":
     video_url = upload_video()
     if video_url:
