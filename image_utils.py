@@ -1,136 +1,80 @@
 import openai
 import requests
 import os
-import base64
 from dotenv import load_dotenv
 
-# ——— Load API keys and WordPress credentials ————————————————
 load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-WP_USERNAME = os.getenv("WP_USERNAME")
-WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
-WP_SITE_URL = os.getenv("WP_SITE_URL")
+client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-client = openai.OpenAI(api_key=OPENAI_API_KEY)
-
-# ——— Step 1: Generate visual prompt from blog content ——————————————
-def generate_prompt_from_blog(blog_path="blog_post.txt"):
-    if not os.path.exists(blog_path):
-        print("❌ blog_post.txt not found.")
-        return "A professional blog poster with financial charts and a blue-gray color scheme."
-
-    with open(blog_path, "r", encoding="utf-8") as f:
-        blog_text = f.read().strip()
-
-    print("🧠 Generating visual prompt from blog content...")
-
+def generate_blog_poster_from_text(blog_text, output_path="blog_poster.png"):
+    """Generate a DALL·E blog poster based on blog content"""
     try:
+        print("🧠 Generating poster prompt...")
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You write creative visual prompts for DALL·E to generate blog posters."},
-                {"role": "user", "content": f"Write a professional, visually engaging image prompt for a financial blog poster based on this content:\n\n{blog_text}"}
+                {"role": "user", "content": f"Write a modern, visually engaging poster prompt for a blog with this content:\n\n{blog_text}"}
             ],
             temperature=0.7
         )
-
         prompt = response.choices[0].message.content.strip()
-        print(f"🎯 Poster prompt generated:\n{prompt}")
-        return prompt
+        print(f"🎯 Prompt: {prompt}")
 
-    except Exception as e:
-        print(f"❌ Failed to generate poster prompt: {e}")
-        return "A blog poster with a stock market theme and business visuals"
-
-# ——— Step 2: Generate DALL·E poster image —————————————————————
-def generate_blog_poster(prompt, output_path="blog_poster.png"):
-    print("🎨 Generating poster image from DALL·E...")
-
-    try:
-        response = client.images.generate(
+        print("🎨 Generating poster image via DALL·E...")
+        image_response = client.images.generate(
             model="dall-e-3",
             prompt=prompt,
             n=1,
-            size="1792x1024"  # ✅ WIDE format, perfect for posters and featured images
+            size="1792x1024"  # ✅ Best size for blog posters
         )
-
-        image_url = response.data[0].url
+        image_url = image_response.data[0].url
         img_data = requests.get(image_url).content
 
         with open(output_path, "wb") as f:
             f.write(img_data)
 
-        print(f"✅ Poster image saved to {output_path}")
+        print(f"✅ Poster saved to {output_path}")
         return output_path
 
     except Exception as e:
-        print(f"❌ Failed to generate poster image: {e}")
+        print(f"❌ Failed to generate poster from blog text: {e}")
         return None
 
-# ——— Step 3: Upload to WordPress + Set as Featured Image ——————————
 def upload_image_to_wp(image_path):
+    """Upload image to WordPress and return media object"""
+    WP_USERNAME = os.getenv("WP_USERNAME")
+    WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
+    WP_SITE_URL = os.getenv("WP_SITE_URL")
+
     if not os.path.exists(image_path):
-        print("❌ Image file not found.")
-        return None
+        print("❌ Image not found:", image_path)
+        return {}
 
-    print("☁️ Uploading poster to WordPress media...")
+    try:
+        media_endpoint = f"{WP_SITE_URL}/wp-json/wp/v2/media"
+        headers = {
+            "Authorization": "Basic " + os.environ.get("WP_AUTH_HEADER"),
+            "Content-Disposition": f'attachment; filename="{os.path.basename(image_path)}"',
+            "Content-Type": "image/png"
+        }
 
-    media_endpoint = f"{WP_SITE_URL}/wp-json/wp/v2/media"
-    auth = base64.b64encode(f"{WP_USERNAME}:{WP_APP_PASSWORD}".encode()).decode()
+        # fallback if WP_AUTH_HEADER is not set
+        if not headers["Authorization"]:
+            import base64
+            token = base64.b64encode(f"{WP_USERNAME}:{WP_APP_PASSWORD}".encode()).decode()
+            headers["Authorization"] = f"Basic {token}"
 
-    headers = {
-        "Authorization": f"Basic {auth}",
-        "Content-Disposition": f'attachment; filename="{os.path.basename(image_path)}"',
-        "Content-Type": "image/png"
-    }
+        with open(image_path, "rb") as img:
+            response = requests.post(media_endpoint, headers=headers, data=img)
 
-    with open(image_path, "rb") as f:
-        response = requests.post(media_endpoint, headers=headers, data=f)
+        if response.status_code == 201:
+            print("✅ Uploaded poster to WordPress")
+            return response.json()
+        else:
+            print(f"❌ Failed to upload poster: {response.text}")
+            return {}
 
-    if response.status_code == 201:
-        media_id = response.json()["id"]
-        image_url = response.json()["source_url"]
-        print(f"✅ Uploaded poster image to WordPress: {image_url}")
-        return media_id
-    else:
-        print(f"❌ Failed to upload image: {response.text}")
-        return None
-
-# ——— Step 4: Set Featured Image on Latest Post ——————————————
-def set_featured_image(media_id):
-    if not media_id:
-        return
-
-    print("🌟 Setting image as blog featured image...")
-
-    auth = base64.b64encode(f"{WP_USERNAME}:{WP_APP_PASSWORD}".encode()).decode()
-    headers = {
-        "Authorization": f"Basic {auth}",
-        "Content-Type": "application/json"
-    }
-
-    # Get latest post ID
-    posts = requests.get(f"{WP_SITE_URL}/wp-json/wp/v2/posts", headers=headers).json()
-    if not posts:
-        print("❌ No posts found.")
-        return
-
-    post_id = posts[0]['id']
-
-    # Set featured media
-    payload = {"featured_media": media_id}
-    resp = requests.post(f"{WP_SITE_URL}/wp-json/wp/v2/posts/{post_id}", headers=headers, json=payload)
-
-    if resp.status_code == 200:
-        print("✅ Featured image set successfully.")
-    else:
-        print(f"❌ Failed to set featured image: {resp.text}")
-
-# ——— Main Execution ————————————————————————————————————————
-if __name__ == "__main__":
-    prompt = generate_prompt_from_blog()
-    poster_path = generate_blog_poster(prompt)
-
-    if poster_path:
-        media_id = upload_image_to_wp(poster_path)
-        set_featured_image(media_id)
+    except Exception as e:
+        print(f"❌ Upload error: {e}")
+        return {}
