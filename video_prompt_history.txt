@@ -35,3 +35,8 @@ VOICEOVER SCRIPT — 2025-04-19 00:59:54
 ================================================================================
 In today's financial news, the Federal Reserve's decision to maintain interest rates has led to a cautious market response, with the S&P 500 and Dow Jones both closing lower. Treasury yields indicate expectations for prolonged high rates, while the U.S. dollar displays mixed movements. Financial experts warn of potential future rate hikes amid ongoing inflation concerns, urging institutional investors to keep an eye on sectors vulnerable to rate fluctuations amid global economic slowdowns.
 
+================================================================================
+VOICEOVER SCRIPT — 2025-04-19 08:31:25
+================================================================================
+This is your financial news update. Global markets are facing volatility amid rising geopolitical tensions and shifting central bank policies, with the MSCI World Index and S&P 500 both declining. U.S. Treasury yields are up, signaling a flight to safety, while eurozone data raises concerns over economic stagnation. As the likelihood of Federal Reserve rate hikes increases, institutional investors are urged to prioritize risk management and diversification. Analysts warn that growth expectations may need recalibrating, stressing the importance of monitoring macroeconomic and geopolitical developments closely.
+
