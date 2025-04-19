@@ -1,46 +1,55 @@
 import os
+import pickle
 from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
-# SETTINGS
 VIDEO_FILE = "video_output.mp4"
-TITLE = "Today's AI-Generated Market Recap #Shorts"
-DESCRIPTION = "Get a quick overview of today’s market trends, powered by AI. #Shorts"
-CATEGORY_ID = "25"  # News & Politics
+TITLE = "AI-Powered Market Recap #Shorts"
+DESCRIPTION = "Auto-generated market update from our AI newsroom. #Shorts"
+CATEGORY_ID = "25"
 PRIVACY = "public"
 SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
+TOKEN_FILE = "youtube_token.pkl"
+
+def get_authenticated_service():
+    creds = None
+    if os.path.exists(TOKEN_FILE):
+        with open(TOKEN_FILE, "rb") as token:
+            creds = pickle.load(token)
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file("client_secret.json", SCOPES)
+            creds = flow.run_console()
+        with open(TOKEN_FILE, "wb") as token:
+            pickle.dump(creds, token)
+    return build("youtube", "v3", credentials=creds)
 
 def upload_video():
-    # Step 1: OAuth login
-    flow = InstalledAppFlow.from_client_secrets_file("client_secret.json", SCOPES)
-    credentials = flow.run_console()
+    youtube = get_authenticated_service()
 
-    # Step 2: Build YouTube API client
-    youtube = build("youtube", "v3", credentials=credentials)
-
-    # Step 3: Prepare video metadata
-    body = {
-        "snippet": {
-            "title": TITLE,
-            "description": DESCRIPTION,
-            "tags": ["finance", "stocks", "Shorts", "ai", "market"],
-            "categoryId": CATEGORY_ID
-        },
-        "status": {
-            "privacyStatus": PRIVACY
-        }
-    }
-
-    # Step 4: Upload video file
     media = MediaFileUpload(VIDEO_FILE, mimetype="video/mp4", resumable=True)
-    request = youtube.videos().insert(part="snippet,status", body=body, media_body=media)
 
-    print("📤 Uploading to YouTube...")
+    request = youtube.videos().insert(
+        part="snippet,status",
+        body={
+            "snippet": {
+                "title": TITLE,
+                "description": DESCRIPTION,
+                "tags": ["finance", "stocks", "market", "ai", "Shorts"],
+                "categoryId": CATEGORY_ID,
+            },
+            "status": {"privacyStatus": PRIVACY},
+        },
+        media_body=media,
+    )
+
+    print("📤 Uploading to YouTube Shorts...")
     response = request.execute()
-
-    print("✅ Uploaded!")
-    print("🔗 Video URL: https://youtube.com/watch?v=" + response["id"])
+    print("✅ Uploaded: https://youtube.com/watch?v=" + response["id"])
 
 if __name__ == "__main__":
     upload_video()
