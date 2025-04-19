@@ -1,8 +1,8 @@
-name: Post Blog to WordPress
+name: Post Blog to WordPress and YouTube
 
 on:
   schedule:
-    - cron: "00 17 * * *"  # Daily at 1:00 PM EDT / 10:00 AM MST
+    - cron: "00 17 * * *"  # Daily 12 PM EST
   workflow_dispatch:
 
 permissions:
@@ -18,86 +18,66 @@ jobs:
         with:
           persist-credentials: true
 
-      - name: Set up Python & Install Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg
-          python3 -m venv .venv
-          .venv/bin/pip install --upgrade pip
-          .venv/bin/pip install --no-cache-dir \
-            pytz requests python-dotenv openai>=1.0.0 gTTS \
-            ffmpeg-python natsort pillow imageio
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
 
-      - name: Verify ffmpeg-python is importable
+      - name: Install dependencies
         run: |
-          .venv/bin/python -c "import ffmpeg; print('✅ ffmpeg-python works')"
+          python -m pip install --upgrade pip
+          pip install pytz requests python-dotenv openai==1.3.7 gTTS moviepy ffmpeg-python google-auth google-auth-oauthlib google-api-python-client
 
-      # 1️⃣ Blog generation
-      - name: Run blog and summary generator
-        run: .venv/bin/python final.py
+      - name: List Python files (debug)
+        run: find . -name "*.py"
+
+      - name: Generate blog and summary
+        run: python final.py
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           WP_USERNAME:     ${{ secrets.WP_USERNAME }}
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL:     ${{ secrets.WP_SITE_URL }}
 
-      # 2️⃣ Blog voiceover
       - name: Generate blog voiceover
-        run: .venv/bin/python generate_audio_from_blog.py
+        run: python generate_audio_from_blog.py
 
-      - name: Upload blog audio to WordPress
-        run: .venv/bin/python upload_audio_and_embed.py
+      - name: Upload and embed audio in blog
+        run: python upload_audio_and_embed.py
         env:
           WP_USERNAME:     ${{ secrets.WP_USERNAME }}
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL:     ${{ secrets.WP_SITE_URL }}
 
-      # 3️⃣ Video script + voiceover
-      - name: Generate 20s video narration
-        run: .venv/bin/python generate_video_prompt.py
+      - name: Generate 20-second video script prompt
+        run: python generate_video_prompt.py
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      - name: Generate video voiceover
-        run: .venv/bin/python generate_audio_for_video.py
-
-      # 4️⃣ Visuals from DALL·E
-      - name: Generate visual prompts
-        run: .venv/bin/python generate_visual_prompts.py
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-
-      - name: Generate AI images
-        run: .venv/bin/python generate_ai_images.py
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-
-      # 5️⃣ Final video using ffmpeg-python
-      - name: Create video from images and audio
-        run: .venv/bin/python generate_video_from_images.py
+      - name: Generate voiceover and images for video
+        run: python generate_video_from_images.py
 
       - name: Upload video to WordPress
-        run: .venv/bin/python upload_video_to_wp.py
+        run: python upload_video_to_wp.py
         env:
           WP_USERNAME:     ${{ secrets.WP_USERNAME }}
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL:     ${{ secrets.WP_SITE_URL }}
 
-      # 6️⃣ Save generated AI images to GitHub
-      - name: Save AI-generated images to repo
-        run: |
-          git config --global user.name "GitHub Actions Bot"
-          git config --global user.email "actions@github.com"
-          git add ai_images/*.png
-          git commit -m "Save AI-generated scene images [skip ci]" || echo "No image changes to commit"
-          git push
+      # 🔐 Decode token securely from secret
+      - name: Restore YouTube token
+        run: echo "$YOUTUBE_TOKEN_B64" | base64 -d > youtube_token.pkl
+        env:
+          YOUTUBE_TOKEN_B64: ${{ secrets.YOUTUBE_TOKEN_B64 }}
 
-      # 7️⃣ Commit logs
+      - name: Upload video to YouTube Shorts
+        run: python upload_to_youtube.py
+
       - name: Commit history logs
         if: success()
         run: |
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "actions@github.com"
-          git add blog_history.txt video_prompt_history.txt visual_prompt_history.txt
-          git commit -m "Update history logs [skip ci]" || echo "No changes to commit"
+          git add blog_history.txt video_prompt_history.txt
+          git commit -m "Update history logs [skip ci]" || echo "No changes"
           git push
