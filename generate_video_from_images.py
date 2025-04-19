@@ -45,7 +45,7 @@ def concatenate_videos(video_files):
 # ——— Merge concatenated video with audio ————————————————————
 def add_audio_to_video(video_path, audio_path, output_path):
     video_input = ffmpeg.input(video_path)
-    audio_input = ffmpeg.input(audio_path)
+    audio_input = ffmpeg.input(audio_path).filter("atempo", 1.25)  # ⚡ ADJUST AUDIO SPEED HERE
 
     (
         ffmpeg
