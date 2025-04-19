@@ -32,3 +32,18 @@ VISUAL PROMPTS — 2025-04-19 00:28:24
 
 [Scene 7] a large, imposing Federal Reserve building with a prominent sign, surrounded by a diverse group of people looking up with anticipation, various financial charts and graphs displaying upward and downward trends, stacks of coins and dollar bills scattered on the ground, a backdrop of a bright sky symbolizing hope and uncertainty.
 
+================================================================================
+VISUAL PROMPTS — 2025-04-19 00:52:28
+================================================================================
+[Scene 1] a vibrant map of the United States, filled with iconic landmarks like the Statue of Liberty, Golden Gate Bridge, and Mount Rushmore, set against a blue sky with fluffy white clouds, and various symbols representing American culture such as the bald eagle, baseball, and a hot dog.
+
+[Scene 2] a bustling financial district with skyscrapers, a large digital display showing the S&P 500 index dropping by 1.2%, a graph with a downward trend, scattered dollar bills, and inflation indicators like rising prices on grocery items, alongside worried investors glancing at their smartphones and financial news reports in the background
+
+[Scene 3] a large digital display showing the 10-year Treasury yield at 4.85%, with upward arrows and graphs, alongside a dollar symbol in bold green, casting a shadow over a globe with highlighted emerging market countries, depicting pressure with downward arrows and stressed financial symbols like broken coins and falling stock charts.
+
+[Scene 4] a sleek, modern office building with the logos of Goldman Sachs and J.P. Morgan prominently displayed on the facade, surrounded by financial graphs and charts, analysts in business attire discussing data in a bright, glass-walled conference room, city skyline in the background
+
+[Scene 5] a worried businesswoman named Morgan standing in front of a large screen displaying fluctuating stock market graphs and news headlines, with images of flags from various countries representing geopolitical tensions, surrounded by anxious investors looking at their smartphones and financial reports, all set in a modern office environment
+
+[Scene 6] a bustling financial district with tall skyscrapers, a group of professional investors in suits analyzing stock market charts on digital screens, fluctuating graphs displaying inflation rates and growth trends, a large billboard showing a warning sign about market adjustments, cloudy skies above suggesting uncertainty
+
