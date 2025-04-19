@@ -51,7 +51,7 @@ def generate_blog_poster(prompt, output_path="blog_poster.png"):
             model="dall-e-3",
             prompt=prompt,
             n=1,
-            size="1024x1024"
+            size="1792x1024"  # ✅ WIDE format, perfect for posters and featured images
         )
 
         image_url = response.data[0].url
