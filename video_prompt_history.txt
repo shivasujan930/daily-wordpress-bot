@@ -40,3 +40,8 @@ VOICEOVER SCRIPT — 2025-04-19 08:31:25
 ================================================================================
 This is your financial news update. Global markets are facing volatility amid rising geopolitical tensions and shifting central bank policies, with the MSCI World Index and S&P 500 both declining. U.S. Treasury yields are up, signaling a flight to safety, while eurozone data raises concerns over economic stagnation. As the likelihood of Federal Reserve rate hikes increases, institutional investors are urged to prioritize risk management and diversification. Analysts warn that growth expectations may need recalibrating, stressing the importance of monitoring macroeconomic and geopolitical developments closely.
 
+================================================================================
+VOICEOVER SCRIPT — 2025-04-19 08:41:13
+================================================================================
+The Federal Reserve's decision to maintain interest rates at 5.25% to 5.50% has triggered volatility in global markets, with the S&P 500 falling 1.2% and 10-year Treasury yields rising to 4.85%. Institutional investors are advised to brace for tighter financial conditions and potential earnings pressures. Key risks include high inflation and geopolitical tensions, which may impact asset allocation strategies and currency exposures in the coming months.
+
