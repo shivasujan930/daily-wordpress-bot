@@ -1,6 +1,5 @@
 import os
 import pickle
-from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
@@ -18,19 +17,17 @@ def get_authenticated_service():
     if os.path.exists(TOKEN_FILE):
         with open(TOKEN_FILE, "rb") as token:
             creds = pickle.load(token)
+
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file("client_secret.json", SCOPES)
-            creds = flow.run_console()
-        with open(TOKEN_FILE, "wb") as token:
-            pickle.dump(creds, token)
+            raise RuntimeError("Missing or invalid YouTube token. Cannot re-auth in CI.")
+
     return build("youtube", "v3", credentials=creds)
 
 def upload_video():
     youtube = get_authenticated_service()
-
     media = MediaFileUpload(VIDEO_FILE, mimetype="video/mp4", resumable=True)
 
     request = youtube.videos().insert(
