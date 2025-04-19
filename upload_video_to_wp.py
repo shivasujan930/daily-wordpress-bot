@@ -50,8 +50,8 @@ def embed_video(video_url):
     post_id = posts[0]['id']
     content = posts[0]['content']['rendered']  # ✅ FIXED
 
-    # Embed video HTML at the top
-    new_content = f'<video controls width="100%">\n  <source src="{video_url}" type="video/mp4">\n</video>\n\n{content}'
+    # ✅ Place video at the end of the post
+    new_content = f'{content}\n\n<video controls width="100%">\n  <source src="{video_url}" type="video/mp4">\n</video>'
     payload = {"content": new_content}
 
     resp = requests.post(f"{WP_SITE_URL}/wp-json/wp/v2/posts/{post_id}", headers=headers, json=payload)
