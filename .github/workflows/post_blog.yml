@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          persist-credentials: true
 
       - name: Set up Python & Install Dependencies
         run: |
@@ -25,7 +27,7 @@ jobs:
           .venv/bin/pip install --no-cache-dir \
             pytz requests python-dotenv openai>=1.0.0 gTTS \
             ffmpeg-python natsort pillow imageio
-          
+
       - name: Verify ffmpeg-python is importable
         run: |
           .venv/bin/python -c "import ffmpeg; print('✅ ffmpeg-python works')"
@@ -70,7 +72,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # 5️⃣ Build final video using ffmpeg-python
+      # 5️⃣ Final video using ffmpeg-python
       - name: Create video from images and audio
         run: .venv/bin/python generate_video_from_images.py
 
@@ -81,7 +83,16 @@ jobs:
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           WP_SITE_URL:     ${{ secrets.WP_SITE_URL }}
 
-      # 6️⃣ Commit logs
+      # 6️⃣ Save generated AI images to GitHub
+      - name: Save AI-generated images to repo
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          git add ai_images/*.png
+          git commit -m "Save AI-generated scene images [skip ci]" || echo "No image changes to commit"
+          git push
+
+      # 7️⃣ Commit logs
       - name: Commit history logs
         if: success()
         run: |
